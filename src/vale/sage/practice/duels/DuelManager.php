@@ -17,7 +17,6 @@ class DuelManager
 
 	public array $duelPlayers = [];
 
-
 	/**
 	 * @param Player $player
 	 * @param Player $opponet
