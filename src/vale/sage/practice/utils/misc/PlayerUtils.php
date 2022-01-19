@@ -47,6 +47,8 @@ class PlayerUtils{
 			$player->setGamemode(GameMode::ADVENTURE());
 			$player->getEffects()->clear();
 			$player->setHealth(20);
+			$world = Loader::getInstance()->getServer()->getWorldManager()->getWorldByName(IUtils::DEFAULT_LOBBY)->getFolderName();
+			$player->teleport(Loader::getInstance()->getServer()->getWorldManager()->getWorldByName($world)->getSafeSpawn());
 			HotbarUtils::sendHotBar($player);
 		}
 	}
