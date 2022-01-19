@@ -2,6 +2,7 @@
 namespace vale\sage\practice\duels;
 
 use pocketmine\player\Player;
+use pocketmine\Server;
 use vale\sage\practice\duels\task\DuelTask;
 use vale\sage\practice\duels\types\MatchedPlayers;
 use vale\sage\practice\Loader;
@@ -13,8 +14,10 @@ class DuelManager
 	/** @var array $duels */
 	public array $duels = [];
 
+	/** @var array $matchedObjects */
 	public array $matchedObjects = [];
 
+	/** @var array $duelPlayers */
 	public array $duelPlayers = [];
 
 	/**
@@ -29,6 +32,16 @@ class DuelManager
 		$this->duelPlayers[] = $matched->getOpponet()->getName();
 		$this->getSessions([$matched->getOpponet(), $matched->getPlayer()])->setMatchId($matched->getMatchId());
 		$this->matchedObjects[$matched->getMatchId()] = $matched;
+	}
+
+	public function matchPlayers(): void{
+		$matched = $this->matchedObjects;
+		foreach ($this->matchedObjects as $object){
+			if($object instanceof MatchedPlayers){
+				//TODO make system to flipping QUEUE Players Together & stuff
+				return;
+			}
+		}
 	}
 
 	public function startDuel(MatchedPlayers $matchedPlayers): void{
@@ -50,6 +63,28 @@ class DuelManager
 	{
 		$value = array_search($object,$this->duels);
 		unset($this->duels[$value]);
+	}
+
+	/**
+	 * @param array $players
+	 */
+	public function removeDuelPlayer(array $players): void{
+		foreach ([$players] as $pobject){
+			if($pobject instanceof Player){
+				$name = $pobject->getName();
+				$true = array_search($name, $this->duelPlayers);
+				unset($this->duelPlayers[$true]);
+			}
+		}
+	}
+
+	/**
+	 * @param string $name
+	 * @return Player|null
+	 */
+	public function getDuelPlayer(string $name): ?Player{
+		$value = array_search($name, $this->duelPlayers);
+		return Server::getInstance()->getPlayerExact($this->duelPlayers[$value]);
 	}
 
 	public function getDuels(): array{
