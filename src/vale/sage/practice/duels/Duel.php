@@ -20,11 +20,24 @@ class Duel{
 
 	public const IN_DUEL = [
 		" ",
-		" §r§fOpponent: §r§d{fighting}",
-		" §r§fDuration: §r§d{duration}",
+		" §r§fYour Ping: §r§d{ping} ms",
+		" §r§fTheir Ping: §r§d{fightping} ms",
+		" ",
+		" §r§dminemen.club",
 		"",
 	];
 
+	public const WAITING = [
+		" ",
+		" Opponent: §r§d{fighting} ",
+		"",
+		" §r§fYour Ping: §r§d{ping} ms",
+		" ",
+		" §r§fTheir Ping: §r§d{fightping} ms",
+		"",
+		" §r§dminemen.club",
+		"",
+	];
 
 	/**
 	 * Match Ended sb
@@ -32,6 +45,8 @@ class Duel{
 	public const MATCH_ENDED = [
 		" ",
 		" §r§fMatch ended.",
+		"",
+		" §r§dminemen.club",
 		"",
 	];
 
@@ -50,49 +65,61 @@ class Duel{
 
 	public int $time = 5;
 
+	public int $wait = 5;
+
 	public function tick(): void
 	{
-		if (is_null($this->matchedPlayers->getPlayer()) || is_null($this->matchedPlayers->getOpponet())) {
-			Loader::getInstance()->getDuelsManager()->removeMatch($this);
-			foreach ($this->getPlayers() as $player) {
-				if ($player->isOnline()) {
-					PlayerUtils::reset($player);
-				}
-			}
-			return;
+		if(is_null($this->getPlayers()[0])){
+			$this->onEnd();
 		}
-		if ($this->PHASE === 0) {
+		if(is_null($this->getPlayers()[1])){
+			$this->onEnd();
+		}
+		if($this->PHASE === 0) {
+			--$this->wait;
+			foreach ($this->getPlayers() as $player) {
+				$this->sendScoreboard($player,"waiting");
+			}
+			if($this->wait <= 0){
+				$this->PHASE = 1;
+			}
+		}
+		if ($this->PHASE === 1) {
 			$this->duration++;
 			foreach ($this->getPlayers() as $player) {
 				$this->sendScoreboard($player, "duel");
 			}
 		}
 
-		if ($this->PHASE === 1) {
+		if ($this->PHASE === 2) {
 			foreach ($this->getPlayers() as $player) {
 				$this->sendScoreboard($player, "ended");
 			}
 		}
 
 		if ($this->duration === self::DUEL_END_TIME) {
-			$this->PHASE = 1;
+			$this->PHASE = 2;
 			foreach ($this->getPlayers() as $player) {
 				$this->sendScoreboard($player, "ended");
 				--$this->time;
 				if ($this->time <= 0) {
-					$this->onEnd();
+					$this->onEnd(false);
 				}
 			}
 		}
 	}
 
 
-	public function onEnd(): void{
+	public function onEnd(bool $playersleft = true): void{
+		if(!$playersleft){
 		Loader::getInstance()->getDuelsManager()->removeMatch($this);
 		foreach ($this->getPlayers() as $player) {
-			$player->sendMessage("Duel Ended");
 			if ($player->isOnline()) {
 				PlayerUtils::reset($player);
+			}
+		}
+			if($playersleft){
+				Loader::getInstance()->getDuelsManager()->removeMatch($this);
 			}
 		}
 	}
@@ -126,6 +153,15 @@ class Duel{
 					$i++;
 				}
 				break;
+			case "waiting":
+				PlayerUtils::makeScoreboard($player, IUtils::LOBBY_PREFIX_SCOREBOARD, "waiting");
+				$i = 1;
+				foreach (self::WAITING as $line) {
+					$line = $this->replaceVariable($player, $line);
+					PlayerUtils::addLine($player, $i, $line . str_repeat(" ", 1));
+					$i++;
+				}
+				break;
 		}
 	}
 
@@ -133,6 +169,10 @@ class Duel{
 		$session = Loader::getInstance()->practiceSessions[$player->getName()];
 		if(!$session instanceof PracticeSession) return null;
 		$string = str_replace("{duration}", $this->duration, $string);
+		$string = str_replace("{ping}", $session->getPlayer()->getNetworkSession()->getPing(), $string);
+		if($session->getFighting() !== null) {
+			$string = str_replace("{fightping}", $session->getFighting()->getPlayer()->getNetworkSession()->getPing(), $string);
+		}
 		if($session->getFighting() !== null) {
 			$string = str_replace("{fighting}", $session->getFighting()->getPlayer()->getName(), $string);
 		}
