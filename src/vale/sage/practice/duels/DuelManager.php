@@ -44,6 +44,15 @@ class DuelManager
 		unset($this->matchedObjects[$matchedPlayers->getMatchId()]);
 	}
 
+	/**
+	 * @param $object
+	 */
+	public function removeMatch($object): void
+	{
+		$value = array_search($object,$this->duels);
+		unset($this->duels[$value]);
+	}
+
 	public function getDuels(): array{
 		return $this->duels;
 	}

@@ -31,17 +31,24 @@ class PlayerUtils{
 	/**
 	 * @param Player $player
 	 */
-	public static function reset(Player $player): void{
-		$player->getInventory()->clearAll();
-		$player->getArmorInventory()->clearAll();
-		$player->setDisplayName($player->getName());
-		$player->setFlying(false);
-		$player->setAllowFlight(false);
-		$player->getHungerManager()->setFood(20);
-		$player->extinguish();
-		$player->setGamemode(GameMode::ADVENTURE());
-		$player->getEffects()->clear();
-		$player->setHealth(20);
+	public static function reset(Player $player): void
+	{
+		$session = Loader::getInstance()->getPracticeSessions()[$player->getName()];
+		if ($session instanceof PracticeSession) {
+			$session->setFighting(null);
+			$session->setMatchId(null);
+			$player->getInventory()->clearAll();
+			$player->getArmorInventory()->clearAll();
+			$player->setDisplayName($player->getName());
+			$player->setFlying(false);
+			$player->setAllowFlight(false);
+			$player->getHungerManager()->setFood(20);
+			$player->extinguish();
+			$player->setGamemode(GameMode::ADVENTURE());
+			$player->getEffects()->clear();
+			$player->setHealth(20);
+			HotbarUtils::sendHotBar($player);
+		}
 	}
 
 

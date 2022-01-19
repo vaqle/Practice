@@ -55,7 +55,7 @@ class PracticeSession
 		return ($this->data["mods"][$option] === $string);
 	}
 
-	public function setFighting(PracticeSession $fighting): void{
+	public function setFighting(?PracticeSession $fighting = null): void{
 		$this->fighting = $fighting;
 	}
 
@@ -87,11 +87,11 @@ class PracticeSession
 		$this->kills++;
 	}
 
-	public function getMatchId(): int{
+	public function getMatchId(): ?int{
 		return $this->matchId;
 	}
 
-	public function setMatchId(int $id): void{
+	public function setMatchId(?int $id = null): void{
 		$this->matchId = $id;
 	}
 

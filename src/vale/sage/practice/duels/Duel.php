@@ -14,15 +14,24 @@ class Duel{
     /** @var string $mapName */
 	public string $mapName;
 
-	public const DUEL_END_TIME = 5 * 20;
+	public const DUEL_END_TIME = 20;
 
-	public const PHASE = 0;
-
+	public int  $PHASE = 0;
 
 	public const IN_DUEL = [
 		" ",
 		" §r§fOpponent: §r§d{fighting}",
 		" §r§fDuration: §r§d{duration}",
+		"",
+	];
+
+
+	/**
+	 * Match Ended sb
+	 */
+	public const MATCH_ENDED = [
+		" ",
+		" §r§fMatch ended.",
 		"",
 	];
 
@@ -39,16 +48,52 @@ class Duel{
 		$this->mapName = $mapName;
 	}
 
-	public function tick(): void{
-		$this->duration++;
-		if(self::PHASE === 0){
-			foreach ($this->getPlayers() as $player){
-				$this->sendScoreboard($player,"duel");
+	public int $time = 5;
+
+	public function tick(): void
+	{
+		if (is_null($this->matchedPlayers->getPlayer()) || is_null($this->matchedPlayers->getOpponet())) {
+			Loader::getInstance()->getDuelsManager()->removeMatch($this);
+			foreach ($this->getPlayers() as $player) {
+				if ($player->isOnline()) {
+					PlayerUtils::reset($player);
+				}
+			}
+			return;
+		}
+		if ($this->PHASE === 0) {
+			$this->duration++;
+			foreach ($this->getPlayers() as $player) {
+				$this->sendScoreboard($player, "duel");
 			}
 		}
-		if($this->duration === self::DUEL_END_TIME){
-			//TODO DUEL MANAGER END DUEL
-			return;
+
+		if ($this->PHASE === 1) {
+			foreach ($this->getPlayers() as $player) {
+				$this->sendScoreboard($player, "ended");
+			}
+		}
+
+		if ($this->duration === self::DUEL_END_TIME) {
+			$this->PHASE = 1;
+			foreach ($this->getPlayers() as $player) {
+				$this->sendScoreboard($player, "ended");
+				--$this->time;
+				if ($this->time <= 0) {
+					$this->onEnd();
+				}
+			}
+		}
+	}
+
+
+	public function onEnd(): void{
+		Loader::getInstance()->getDuelsManager()->removeMatch($this);
+		foreach ($this->getPlayers() as $player) {
+			$player->sendMessage("Duel Ended");
+			if ($player->isOnline()) {
+				PlayerUtils::reset($player);
+			}
 		}
 	}
 
@@ -67,6 +112,15 @@ class Duel{
 				PlayerUtils::makeScoreboard($player, IUtils::LOBBY_PREFIX_SCOREBOARD, "duel");
 				$i = 1;
 				foreach (self::IN_DUEL as $line) {
+					$line = $this->replaceVariable($player, $line);
+					PlayerUtils::addLine($player, $i, $line . str_repeat(" ", 1));
+					$i++;
+				}
+				break;
+			case "ended":
+				PlayerUtils::makeScoreboard($player, IUtils::LOBBY_PREFIX_SCOREBOARD, "ended");
+				$i = 1;
+				foreach (self::MATCH_ENDED as $line) {
 					$line = $this->replaceVariable($player, $line);
 					PlayerUtils::addLine($player, $i, $line . str_repeat(" ", 1));
 					$i++;
