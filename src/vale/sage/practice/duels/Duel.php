@@ -109,13 +109,16 @@ class Duel{
 		}
 	}
 
-
+	/**
+	 * @param bool $playersleft
+	 */
 	public function onEnd(bool $playersleft = true): void{
 		if(!$playersleft){
 		Loader::getInstance()->getDuelsManager()->removeMatch($this);
 		foreach ($this->getPlayers() as $player) {
 			if ($player->isOnline()) {
 				PlayerUtils::reset($player);
+				Loader::getInstance()->getDuelsManager()->removeDuelPlayer($this->getPlayers());
 			}
 		}
 			if($playersleft){
