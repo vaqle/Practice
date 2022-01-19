@@ -1,0 +1,6 @@
+name: "Sage Practice"
+main: vale\sage\practice\Loader
+api: 4.0.0
+author: vaqle
+description: "Practice Core Written for Sage"
+version: 1.0
